@@ -226,9 +226,9 @@ You can view the token page below (it takes a few minutes to be visible)`,
             ).toString()
           );
           console.log("actionHashes:", actionHashes);
-          const actionHash = actionHashes[action];
+          let actionHash = actionHashes[action];
           console.log("actionHash:", actionHash);
-          if (!actionHash && action != "sdk" && action != "sdk2") {
+          if (!actionHash && !action.includes("sdk")) {
             ctx.reply("Action not found");
             return;
           }
@@ -236,13 +236,15 @@ You can view the token page below (it takes a few minutes to be visible)`,
           // ! NOTE: You can change the chainId to any chain you want to execute the action on
           const chainId = 8453;
           switch (action) {
+            case "sdkcl2":
+            case "sdkcl":
             case "sdk2":
             case "sdk": {
-              let sdkAction = actionHashes["decrypt-action"];
-              if (action == "sdk2") {
-                sdkAction = actionHashes["decrypt-action2"];
+              actionHash = actionHashes["decrypt-action"];
+              if (["sdk2", "sdkcl2"].includes(action)) {
+                actionHash = actionHashes["decrypt-action2"];
               }
-              console.log("here: ", sdkAction.IpfsHash);
+              console.log("here: ", actionHash.IpfsHash);
               const litNodeClient = new LitJsSdk.LitNodeClientNodeJs({
                 alertWhenUnauthorized: false,
                 litNetwork: "datil-dev",
@@ -298,31 +300,42 @@ You can view the token page below (it takes a few minutes to be visible)`,
                   ],
                   dataToEncrypt: toUtf8Bytes("david"),
                 });
-              // const sessionSigs = await getSessionSignatures(litNodeClient, ethWallet);
-              const decrypted = await litNodeClient.executeJs({
-                ipfsId: sdkAction.IpfsHash,
-                sessionSigs,
-                jsParams: {
-                  decryptRequest: {
-                    ciphertext,
-                    dataToEncryptHash,
-                    chain: "base",
+
+              if (["sdk", "sdk2"].includes(action)) {
+                const decrypted = await litNodeClient.executeJs({
+                  ipfsId: actionHash.IpfsHash,
+                  sessionSigs,
+                  jsParams: {
+                    decryptRequest: {
+                      ciphertext,
+                      dataToEncryptHash,
+                      chain: "base",
+                    },
                   },
+                });
+                ctx.reply(
+                  `Action executed on Lit Nodes 🔥\n\n` +
+                    `Action: <code>${actionHash.IpfsHash}</code>\n` +
+                    `Result:\n<pre lang="json"><code>${JSON.stringify(
+                      decrypted,
+                      null,
+                      2
+                    )}</code></pre>`,
+                  {
+                    parse_mode: "HTML",
+                  }
+                );
+                return;
+              }
+              // let the normal loop handling invoking the CL api
+              jsParams = {
+                decryptRequest: {
+                  ciphertext,
+                  dataToEncryptHash,
+                  chain: "base",
                 },
-              });
-              ctx.reply(
-                `Action executed on Lit Nodes 🔥\n\n` +
-                  `Action: <code>${sdkAction.IpfsHash}</code>\n` +
-                  `Result:\n<pre lang="json"><code>${JSON.stringify(
-                    decrypted,
-                    null,
-                    2
-                  )}</code></pre>`,
-                {
-                  parse_mode: "HTML",
-                }
-              );
-              return;
+              };
+              break;
             }
             case "hello-action": {
               // ! NOTE: The message to sign can be any normal message, or raw TX
