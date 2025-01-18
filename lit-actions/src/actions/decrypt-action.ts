@@ -11,7 +11,7 @@ const go = async () => {
       accessControlConditions: decryptRequest.accessControlConditions,
       ciphertext: decryptRequest.ciphertext,
       dataToEncryptHash: decryptRequest.dataToEncryptHash,
-      authSig: "",
+      authSig: null,
       chain: decryptRequest.chain,
     });
     Lit.Actions.setResponse({

@@ -111,8 +111,9 @@ export const gateDataAction: Action = {
           true // TODO how can we tell if it's agent or user?
         );
 
-        elizaLogger.log(
-          ` [gateDataAction] Stored message with embedding: ${doc1}`
+        elizaLogger.debug(
+          "[gateDataAction] Stored message with embedding",
+          doc1
         );
         return;
       }

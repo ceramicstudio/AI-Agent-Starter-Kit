@@ -16,6 +16,19 @@ import { keccak256, getBytes, toUtf8Bytes } from "ethers";
 import { TwitterService } from "./twitter.service.js";
 import { NgrokService } from "./ngrok.service.js";
 
+// avoid 400 errors sending params back to telegram
+const htmlEscape = (key: AnyType, val: AnyType) => {
+  if (typeof val === "string") {
+    return val
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;"); // single quote
+  }
+  return val;
+};
+
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 export class TelegramService extends BaseService {
   private static instance: TelegramService;
@@ -228,13 +241,27 @@ You can view the token page below (it takes a few minutes to be visible)`,
             }
             case "decrypt-action": {
               // TODO: how do i get real text from the msg
-              const message =
-                ctx.from?.username ?? ctx.from?.first_name ?? "test data";
               jsParams = {
                 decryptRequest: {
-                  accessControlConditions: [{}],
-                  cipherText: "this is fake",
-                  dataToEncryptHash: `not going to work: ${message}`,
+                  accessControlConditions: [
+                    {
+                      contractAddress: "",
+                      standardContractType: "",
+                      chain: "base",
+                      method: "eth_getBalance",
+                      parameters: [":userAddress", "latest"],
+                      returnValueTest: {
+                        comparator: "<=",
+                        value: "1000000000000", // 0.000001 ETH
+                      },
+                    },
+                  ],
+                  cipherText:
+                    "iYhKhdNHKomJpQhKyMvUbDeIp13iwbwHHFey3cOvOUPkZ+EElNjwCTTxcDWW/pZdeqEf2IbRByGM5V+8GBFhh/zDTBZw+H2fy/Xu08M3dTNUr1WU6TeQugkcXT84PKdB0PwMQYzcExP5Hy9o+Kiwz4zhLgW4QkL54fssd7jrptyJrZVTUJ+qJCCmu2ek8WddWt7pzHHzpxvPvS6YoY59suwnn9ijAg==",
+                  dataToEncryptHash:
+                    "36f13c87cb4bd6857b6d7e2aad324765bfe5dd16a5211a52170da2cfbfdf9887",
+                  // cipherText: "sYid6AV4l9QyL87gSTVe9QKIN54OqqnVZ2qgh+lIGqWqUqO6CQ0Dc9tYactIiOiRep+EhgMjoiV4AvrRgaqwo8R3KgWTcWr2Of8lC8mueSog7US+dTouatqzh+36aGq+0q2v5iU/AWZpL9Ju+GsDzxQC",
+                  // dataToEncryptHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                   chain: chainId.toString(),
                 },
               };
@@ -251,7 +278,7 @@ You can view the token page below (it takes a few minutes to be visible)`,
                     {
                       contractAddress: "",
                       standardContractType: "",
-                      chain: "ethereum",
+                      chain: "base",
                       method: "eth_getBalance",
                       parameters: [":userAddress", "latest"],
                       returnValueTest: {
@@ -275,7 +302,7 @@ You can view the token page below (it takes a few minutes to be visible)`,
             "Executing action..." +
               `\n\nAction Hash: <code>${actionHash.IpfsHash}</code>\n\nParams:\n<pre lang="json"><code>${JSON.stringify(
                 jsParams,
-                null,
+                htmlEscape,
                 2
               )}</code></pre>`,
             {
