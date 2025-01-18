@@ -239,6 +239,7 @@ You can view the token page below (it takes a few minutes to be visible)`,
               };
               break;
             }
+            case "decrypt-action2":
             case "decrypt-action": {
               // TODO: how do i get real text from the msg
               jsParams = {

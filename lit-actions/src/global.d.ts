@@ -404,7 +404,7 @@ declare global {
   const decryptRequest: {
     /// See `MultipleAccessControlConditions` in the `LitJsSdk` for examples
     accessControlConditions: object[];
-    ciphertext: String;
+    ciphertext: string;
     dataToEncryptHash: string;
     chain: string;
   };
