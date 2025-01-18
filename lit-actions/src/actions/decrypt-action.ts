@@ -2,7 +2,19 @@
 /// <reference path="../global.d.ts" />
 
 const go = async () => {
-  if (!decryptRequest) {
+  if (
+    !decryptRequest ||
+    !decryptRequest.ciphertext ||
+    !decryptRequest.dataToEncryptHash ||
+    !decryptRequest.chain
+  ) {
+    Lit.Actions.setResponse({
+      response: JSON.stringify({
+        message: `missing required input field`,
+        input: decryptRequest,
+        timestamp: Date.now().toString(),
+      }),
+    });
     return null;
   }
 

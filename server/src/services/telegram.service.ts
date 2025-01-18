@@ -246,7 +246,7 @@ You can view the token page below (it takes a few minutes to be visible)`,
                 decryptRequest: {
                   accessControlConditions: [
                     {
-                      contractAddress: "",
+                      contractAddress: "evmBasic",
                       standardContractType: "",
                       chain: "base",
                       method: "eth_getBalance",
@@ -257,13 +257,17 @@ You can view the token page below (it takes a few minutes to be visible)`,
                       },
                     },
                   ],
-                  cipherText:
-                    "iYhKhdNHKomJpQhKyMvUbDeIp13iwbwHHFey3cOvOUPkZ+EElNjwCTTxcDWW/pZdeqEf2IbRByGM5V+8GBFhh/zDTBZw+H2fy/Xu08M3dTNUr1WU6TeQugkcXT84PKdB0PwMQYzcExP5Hy9o+Kiwz4zhLgW4QkL54fssd7jrptyJrZVTUJ+qJCCmu2ek8WddWt7pzHHzpxvPvS6YoY59suwnn9ijAg==",
+                  // ciphertext:
+                  //   "iYhKhdNHKomJpQhKyMvUbDeIp13iwbwHHFey3cOvOUPkZ+EElNjwCTTxcDWW/pZdeqEf2IbRByGM5V+8GBFhh/zDTBZw+H2fy/Xu08M3dTNUr1WU6TeQugkcXT84PKdB0PwMQYzcExP5Hy9o+Kiwz4zhLgW4QkL54fssd7jrptyJrZVTUJ+qJCCmu2ek8WddWt7pzHHzpxvPvS6YoY59suwnn9ijAg==",
+                  // dataToEncryptHash:
+                  //   "36f13c87cb4bd6857b6d7e2aad324765bfe5dd16a5211a52170da2cfbfdf9887",
+                  ciphertext:
+                    "pZwCsqq9SwZT6t5aexLU7+HHdxGzWhBeQLLBoyuW4wLaqcuhLjgv/S0/me1P8x63YgEl/CO3PWi56rbVfjY/fkDApTPTn8vvALgzG4k0Fcgg75/Wu7jVImN4udsx3eYNpBDxgft+p8v2a+ZPnd6o9CsC",
                   dataToEncryptHash:
-                    "36f13c87cb4bd6857b6d7e2aad324765bfe5dd16a5211a52170da2cfbfdf9887",
-                  // cipherText: "sYid6AV4l9QyL87gSTVe9QKIN54OqqnVZ2qgh+lIGqWqUqO6CQ0Dc9tYactIiOiRep+EhgMjoiV4AvrRgaqwo8R3KgWTcWr2Of8lC8mueSog7US+dTouatqzh+36aGq+0q2v5iU/AWZpL9Ju+GsDzxQC",
+                    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                  // ciphertext: "sYid6AV4l9QyL87gSTVe9QKIN54OqqnVZ2qgh+lIGqWqUqO6CQ0Dc9tYactIiOiRep+EhgMjoiV4AvrRgaqwo8R3KgWTcWr2Of8lC8mueSog7US+dTouatqzh+36aGq+0q2v5iU/AWZpL9Ju+GsDzxQC",
                   // dataToEncryptHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                  chain: chainId.toString(),
+                  chain: "base",
                 },
               };
               break;
@@ -277,7 +281,7 @@ You can view the token page below (it takes a few minutes to be visible)`,
                 encryptRequest: {
                   accessControlConditions: [
                     {
-                      contractAddress: "",
+                      contractAddress: "evmBasic",
                       standardContractType: "",
                       chain: "base",
                       method: "eth_getBalance",

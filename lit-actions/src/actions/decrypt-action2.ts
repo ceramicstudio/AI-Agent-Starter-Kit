@@ -2,7 +2,19 @@
 /// <reference path="../global.d.ts" />
 
 const go = async () => {
-  if (!decryptRequest) {
+  if (
+    !decryptRequest ||
+    !decryptRequest.ciphertext ||
+    !decryptRequest.dataToEncryptHash ||
+    !decryptRequest.chain
+  ) {
+    Lit.Actions.setResponse({
+      response: JSON.stringify({
+        message: `missing required input field`,
+        input: decryptRequest,
+        timestamp: Date.now().toString(),
+      }),
+    });
     return null;
   }
 
@@ -14,13 +26,23 @@ const go = async () => {
       authSig: null,
       chain: decryptRequest.chain,
     });
-    Lit.Actions.setResponse({
-      response: JSON.stringify({
-        message: "Successfully decrypted data",
-        decrypted,
-        timestamp: Date.now().toString(),
-      }),
-    });
+    if (!decrypted || decrypted.length == 0) {
+      Lit.Actions.setResponse({
+        response: JSON.stringify({
+          message: "Decrypted data is empty even though it was successful",
+          decryptRequest,
+          timestamp: Date.now().toString(),
+        }),
+      });
+    } else {
+      Lit.Actions.setResponse({
+        response: JSON.stringify({
+          message: "Successfully decrypted data",
+          decrypted: decrypted.toString(),
+          timestamp: Date.now().toString(),
+        }),
+      });
+    }
     return decrypted;
   } catch (err) {
     Lit.Actions.setResponse({

@@ -167,7 +167,7 @@ export class StorageService {
             throw new Error("Client is not initialized");
           }
 
-          const { cipherText, dataToEncryptHash } = JSON.parse(row.content);
+          const { ciphertext, dataToEncryptHash } = JSON.parse(row.content);
           const { data } = await this.client.post(
             `/telegrambot/executeLitActionUsingPKP?chainId=${chainId}`,
             {
@@ -187,7 +187,7 @@ export class StorageService {
                       },
                     },
                   ],
-                  cipherText,
+                  ciphertext,
                   dataToEncryptHash,
                   chain: "ethereum",
                 },
