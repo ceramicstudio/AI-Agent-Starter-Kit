@@ -10,22 +10,37 @@ const go = async () => {
   ) {
     Lit.Actions.setResponse({
       response: JSON.stringify({
-        message: `missing required input field`,
-        input: decryptRequest,
+        message: `bad_request: missing input`,
         timestamp: Date.now().toString(),
       }),
     });
-    return null;
+    return;
   }
+  const accessControlConditions = [
+    {
+      contractAddress: "evmBasic",
+      standardContractType: "",
+      chain: "base",
+      method: "eth_getBalance",
+      parameters: [":userAddress", "latest"],
+      returnValueTest: {
+        comparator: "<=",
+        value: "1000000000000000000", // 1 ETH
+      },
+    },
+  ];
 
   try {
     const decrypted = await Lit.Actions.decryptAndCombine({
-      accessControlConditions: decryptRequest.accessControlConditions,
+      accessControlConditions,
       ciphertext: decryptRequest.ciphertext,
       dataToEncryptHash: decryptRequest.dataToEncryptHash,
       authSig: null,
       chain: decryptRequest.chain,
     });
+    if (!decrypted) {
+      return;
+    }
     Lit.Actions.setResponse({
       response: JSON.stringify({
         message: "Successfully decrypted data",
@@ -33,7 +48,6 @@ const go = async () => {
         timestamp: Date.now().toString(),
       }),
     });
-    return decrypted;
   } catch (err) {
     Lit.Actions.setResponse({
       response: JSON.stringify({
@@ -41,7 +55,6 @@ const go = async () => {
         timestamp: Date.now().toString(),
       }),
     });
-    return err.message;
   }
 };
 

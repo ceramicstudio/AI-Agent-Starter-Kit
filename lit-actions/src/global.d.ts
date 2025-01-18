@@ -397,13 +397,9 @@ declare global {
   const sigName: string;
 
   const encryptRequest: {
-    /// See `MultipleAccessControlConditions` in the `LitJsSdk` for examples
-    accessControlConditions: object[];
     toEncrypt: Uint8Array;
   };
   const decryptRequest: {
-    /// See `MultipleAccessControlConditions` in the `LitJsSdk` for examples
-    accessControlConditions: object[];
     ciphertext: string;
     dataToEncryptHash: string;
     chain: string;

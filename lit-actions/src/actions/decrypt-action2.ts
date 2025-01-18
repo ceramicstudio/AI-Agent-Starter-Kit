@@ -10,48 +10,52 @@ const go = async () => {
   ) {
     Lit.Actions.setResponse({
       response: JSON.stringify({
-        message: `missing required input field`,
-        input: decryptRequest,
+        message: `bad_request: missing input`,
         timestamp: Date.now().toString(),
       }),
     });
-    return null;
+    return;
   }
+  const accessControlConditions = [
+    {
+      contractAddress: "evmBasic",
+      standardContractType: "",
+      chain: "base",
+      method: "eth_getBalance",
+      parameters: [":userAddress", "latest"],
+      returnValueTest: {
+        comparator: "<=",
+        value: "1000000000000000000", // 1 ETH
+      },
+    },
+  ];
 
   try {
     const decrypted = await Lit.Actions.decryptToSingleNode({
-      accessControlConditions: decryptRequest.accessControlConditions,
+      accessControlConditions,
       ciphertext: decryptRequest.ciphertext,
       dataToEncryptHash: decryptRequest.dataToEncryptHash,
       authSig: null,
       chain: decryptRequest.chain,
     });
-    if (!decrypted || decrypted.length == 0) {
-      Lit.Actions.setResponse({
-        response: JSON.stringify({
-          message: "Decrypted data is empty even though it was successful",
-          decryptRequest,
-          timestamp: Date.now().toString(),
-        }),
-      });
-    } else {
-      Lit.Actions.setResponse({
-        response: JSON.stringify({
-          message: "Successfully decrypted data",
-          decrypted: decrypted.toString(),
-          timestamp: Date.now().toString(),
-        }),
-      });
+    if (!decrypted) {
+      return;
     }
-    return decrypted;
+    Lit.Actions.setResponse({
+      response: JSON.stringify({
+        message: "Successfully decrypted data",
+        decrypted,
+        timestamp: Date.now().toString(),
+      }),
+    });
   } catch (err) {
     Lit.Actions.setResponse({
       response: JSON.stringify({
         message: `failed to decrypt data: ${err.message}`,
+        error: err,
         timestamp: Date.now().toString(),
       }),
     });
-    return err.message;
   }
 };
 
