@@ -16,6 +16,15 @@ import { keccak256, getBytes, toUtf8Bytes } from "ethers";
 import { TwitterService } from "./twitter.service.js";
 import { NgrokService } from "./ngrok.service.js";
 
+import * as LitJsSdk from "@lit-protocol/lit-node-client";
+import { Wallet } from "ethers/wallet";
+import { createSiweMessage } from "@lit-protocol/auth-helpers/src/lib/siwe/create-siwe-message.js";
+import {
+  generateAuthSig,
+  LitAbility,
+  LitActionResource,
+} from "@lit-protocol/auth-helpers";
+
 // avoid 400 errors sending params back to telegram
 const htmlEscape = (key: AnyType, val: AnyType) => {
   if (typeof val === "string") {
@@ -219,14 +228,102 @@ You can view the token page below (it takes a few minutes to be visible)`,
           console.log("actionHashes:", actionHashes);
           const actionHash = actionHashes[action];
           console.log("actionHash:", actionHash);
-          if (!actionHash) {
+          if (!actionHash && action != "sdk" && action != "sdk2") {
             ctx.reply("Action not found");
             return;
           }
           let jsParams;
           // ! NOTE: You can change the chainId to any chain you want to execute the action on
-          const chainId = 84532; // 8453;
+          const chainId = 8453;
           switch (action) {
+            case "sdk2":
+            case "sdk": {
+              let sdkAction = actionHashes["decrypt-action"];
+              if (action == "sdk2") {
+                sdkAction = actionHashes["decrypt-action2"];
+              }
+              console.log("here: ", sdkAction.IpfsHash);
+              const litNodeClient = new LitJsSdk.LitNodeClientNodeJs({
+                alertWhenUnauthorized: false,
+                litNetwork: "datil-dev",
+                debug: true,
+              });
+              await litNodeClient.connect();
+              // Connect to the wallet
+              const ethWallet = new Wallet(process.env.ETHEREUM_PRIVATE_KEY!);
+
+              const sessionSigs = await litNodeClient.getSessionSigs({
+                chain: "ethereum",
+                expiration: new Date(Date.now() + 1000 * 60 * 10).toISOString(), // 10 minutes
+                resourceAbilityRequests: [
+                  {
+                    resource: new LitActionResource("*"),
+                    ability: LitAbility.LitActionExecution,
+                  },
+                ],
+                authNeededCallback: async ({
+                  uri,
+                  expiration,
+                  resourceAbilityRequests,
+                }) => {
+                  const toSign = await createSiweMessage({
+                    uri,
+                    expiration,
+                    resources: resourceAbilityRequests,
+                    walletAddress: await ethWallet.getAddress(),
+                    nonce: await litNodeClient.getLatestBlockhash(),
+                    litNodeClient,
+                  });
+
+                  return await generateAuthSig({
+                    signer: ethWallet,
+                    toSign,
+                  });
+                },
+              });
+              const { ciphertext, dataToEncryptHash } =
+                await litNodeClient.encrypt({
+                  accessControlConditions: [
+                    {
+                      contractAddress: "evmBasic",
+                      standardContractType: "",
+                      chain: "base",
+                      method: "eth_getBalance",
+                      parameters: [":userAddress", "latest"],
+                      returnValueTest: {
+                        comparator: "<=",
+                        value: "1000000000000000000", // 1 ETH
+                      },
+                    },
+                  ],
+                  dataToEncrypt: toUtf8Bytes("david"),
+                });
+              // const sessionSigs = await getSessionSignatures(litNodeClient, ethWallet);
+              const decrypted = await litNodeClient.executeJs({
+                ipfsId: sdkAction.IpfsHash,
+                sessionSigs,
+                jsParams: {
+                  decryptRequest: {
+                    ciphertext,
+                    dataToEncryptHash,
+                    chain: "base",
+                  },
+                },
+              });
+              ctx.reply(
+                `Action executed on Lit Nodes 🔥\n\n` +
+                  `Action: <code>${sdkAction.IpfsHash}</code>\n` +
+                  `Result:\n<pre lang="json"><code>${JSON.stringify(
+                    decrypted,
+                    null,
+                    2
+                  )}</code></pre>`,
+                {
+                  parse_mode: "HTML",
+                }
+              );
+              return;
+            }
             case "hello-action": {
               // ! NOTE: The message to sign can be any normal message, or raw TX
               // ! In order to sign EIP-191 message, you need to encode it properly, Lit protocol does raw signatures
@@ -244,19 +341,6 @@ You can view the token page below (it takes a few minutes to be visible)`,
               // TODO: how do i get real text from the msg
               jsParams = {
                 decryptRequest: {
-                  accessControlConditions: [
-                    {
-                      contractAddress: "evmBasic",
-                      standardContractType: "",
-                      chain: "base",
-                      method: "eth_getBalance",
-                      parameters: [":userAddress", "latest"],
-                      returnValueTest: {
-                        comparator: "<=",
-                        value: "1000000000000", // 0.000001 ETH
-                      },
-                    },
-                  ],
                   ciphertext:
                     "iS74XQGc+s5fyzjvp1UfqXMVVpziV2brqUs7VaWTc+Sj7w2RFuiO2gCg3U3U2nRsCB77NHIAYkPc6c9GlotNEit1Kp3kKVPney862DoP0zcgmUoYiHJP/s98cvPZ+HyYFjzL1FlSUakr3zdxr0XXP2gC",
                   dataToEncryptHash:
@@ -283,19 +367,6 @@ You can view the token page below (it takes a few minutes to be visible)`,
               // ! NOTE: You can send any jsParams you want here, it depends on your Lit action code
               jsParams = {
                 encryptRequest: {
-                  accessControlConditions: [
-                    {
-                      contractAddress: "evmBasic",
-                      standardContractType: "",
-                      chain: "base",
-                      method: "eth_getBalance",
-                      parameters: [":userAddress", "latest"],
-                      returnValueTest: {
-                        comparator: "<=",
-                        value: "1000000000000", // 0.000001 ETH
-                      },
-                    },
-                  ],
                   toEncrypt: toUtf8Bytes(message),
                 },
               };
